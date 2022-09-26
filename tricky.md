@@ -1,4 +1,5 @@
 
+- pawn base row 2 squares
 - castle
 - en passant
 - conversion

@@ -58,4 +58,4 @@ fun Int.isKing() = KING_MASK.and(this) != 0
 fun Int.isWhite() = !this.isBlack()
 fun Int.isBlack() = Player.BLACK.mask.and(this) != 0
 fun Int.isPlayerColor(player: Player) = if(player == Player.WHITE) this.isWhite() else this.isBlack()
-
+val Int.player get() = if(this.isWhite()) Player.WHITE else Player.BLACK

@@ -93,4 +93,6 @@ fun main(args: Array<String>) {
     val possibleMoves = board.getPossibleMoves(WHITE)
     println("\nPossible moves: ${possibleMoves.size}")
     possibleMoves.forEach { println(it) }
+
+    println("\n" + Evaluator(board).evaluate())
 }
