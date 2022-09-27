@@ -16,13 +16,14 @@ import isWhite
 
 const val MOBILITY_FACTOR = 0.05
 const val DEVELOPMENT_FACTOR = 1.0
+const val PAWN_FACTOR = 1.0
 
 class Evaluator(val board: Board) {
     fun evaluate(): Double {
         var score = 0.0
 
         score += evaluateMaterial()
-        score += evaluatePawns()
+        score += evaluatePawns() * PAWN_FACTOR
         score += evaluateMobility() * MOBILITY_FACTOR
         score += evaluateDevelopment() * DEVELOPMENT_FACTOR
 
@@ -31,7 +32,22 @@ class Evaluator(val board: Board) {
 
     fun evaluatePawns(): Double {
         // how are the pawns covered
-        return 0.0
+        var score = 0.0
+
+        for(square in board.squares) {
+            val piece = board.piece(square)
+            if(piece.isPawn()) {
+                if(piece.isWhite()) {
+                    score += (square.y - 1) * 0.2
+                } else {
+                    score -= (6 - square.y) * 0.2
+                }
+            }
+        }
+
+        // subtract blocked pawns
+
+        return score
     }
 
     fun evaluateMobility(): Double {

@@ -10,7 +10,7 @@ data class Move(val from: Coords, val to: Coords, val player: Player, val enPass
     fun isTargetFreeOrOpponent(board: Board) = board.empty(to) || !board.piece(to).isPlayerColor(player)
 
     // Does not check pawn move validity!!!
-    fun isValid(board: Board) = isInBounds(board) && isPathFree(board) && isTargetFreeOrOpponent(board)
+    fun isValid(board: Board) = isInBounds(board) && isTargetFreeOrOpponent(board) && isPathFree(board)
 
     fun isPathFree(board: Board): Boolean {
         val vec = to - from

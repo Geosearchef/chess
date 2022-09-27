@@ -31,9 +31,10 @@ import java.util.concurrent.ForkJoinPool
 import javax.imageio.ImageIO
 import javax.swing.JFrame
 import javax.swing.JPanel
+import javax.swing.SwingUtilities
 import kotlin.math.floor
 
-class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(), MouseListener, KeyListener {
+class BoardVisualizer(val board: Board, val invert: Boolean = false, val autoPlay: Boolean = false) : JPanel(), MouseListener, KeyListener {
 
     val SQUARE_SIZE = 80
 
@@ -176,6 +177,16 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
                     executeMove(it, clickedSquare)
 
                     selectedSquare = null
+
+                    if(autoPlay) {
+                        Thread {
+                            Thread.sleep(100)
+                            SwingUtilities.invokeLater {
+                                keyPressed(KeyEvent(this, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, 32))
+                                keyPressed(KeyEvent(this, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, 10))
+                            }
+                        }.start()
+                    }
                 }
             }
         }
@@ -279,7 +290,7 @@ fun main(args: Array<String>) {
     println()
 
     val board = Board()
-    val visualizer = BoardVisualizer(board)
+    val visualizer = BoardVisualizer(board, autoPlay = true)
 
     visualizer.requestRepaint()
 }
