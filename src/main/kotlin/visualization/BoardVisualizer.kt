@@ -34,7 +34,7 @@ import javax.swing.JPanel
 import javax.swing.SwingUtilities
 import kotlin.math.floor
 
-class BoardVisualizer(val board: Board, val invert: Boolean = false, val autoPlay: Boolean = false) : JPanel(), MouseListener, KeyListener {
+class BoardVisualizer(val board: Board, val invert: Boolean = false, val iterationDepths: List<Int> = listOf(4, 5, 2), val autoPlay: Boolean = false) : JPanel(), MouseListener, KeyListener {
 
     val SQUARE_SIZE = 80
 
@@ -48,11 +48,13 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false, val autoPla
     val POSSIBLE_MOVE_TARGET_COLOR = Color(201, 214, 86, 255)
     val OPTIMAL_MOVE_TARGET_COLOR = Color(255, 197, 102, 255)
     val OPTIMAL_MOVE_PIECE_COLOR = Color(255, 197, 102, 255)
+    val LAST_MOVE_INDICATOR = Color(82, 92, 58, 255)
 
     val frame = JFrame("CE").apply {
         defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         setSize(WIDTH, HEIGHT)
         setLocationRelativeTo(null)
+        isResizable = false
 
         add(this@BoardVisualizer)
 
@@ -89,11 +91,15 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false, val autoPla
                 val screenSpacePos = boardToScreenSpace(square)
                 fillRect(screenSpacePos, SQUARE_SIZE, SQUARE_SIZE)
 
-                var optimalNextSource = optimalNextMoves.any { it.from == square }
-                var optimalNextTarget = optimalNextMoves.any { it.to == square }
+                val optimalNextSource = optimalNextMoves.any { it.from == square }
+                val optimalNextTarget = optimalNextMoves.any { it.to == square }
+                val isLastMoveSourceOrTarget = board.lastMove?.from == square || board.lastMove?.to == square
                 val squareSelected = selectedSquare == square
 
                 var borderColor: Color? = null
+                if(isLastMoveSourceOrTarget) {
+                    borderColor = LAST_MOVE_INDICATOR
+                }
                 if(optimalNextSource) {
                     borderColor = OPTIMAL_MOVE_PIECE_COLOR
                 }
@@ -202,7 +208,7 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false, val autoPla
         e ?: throw RuntimeException("AWT encountered an error while handing us a mouse event.")
 
         if(e.keyCode == 32) {
-            val best = calculateOptimalMovesIteratively(board, playerToMove, iterationDepths = listOf(4, 5, 2), parallel = true)
+            val best = calculateOptimalMovesIteratively(board, playerToMove, iterationDepths = iterationDepths, parallel = true)
             val bestMoves = best.first
             val bestScore = best.second
 
@@ -290,7 +296,7 @@ fun main(args: Array<String>) {
     println()
 
     val board = Board()
-    val visualizer = BoardVisualizer(board, autoPlay = true)
+    val visualizer = BoardVisualizer(board, iterationDepths = listOf(4, 5, 2), autoPlay = true)
 
     visualizer.requestRepaint()
 }

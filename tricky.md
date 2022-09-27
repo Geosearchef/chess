@@ -1,8 +1,9 @@
 ## Optimization
 - caching / hashing of states?
-- coarse and fine grained (more depth, less initial moves) search?
 
 ## Quality
+- WHY IS IT AVOIDING TAKING MY LAST PIECE?
+
 - better evaluation
   - (e.g. mobility, how many moves possible, how many squares covered?)
   - free pawns
