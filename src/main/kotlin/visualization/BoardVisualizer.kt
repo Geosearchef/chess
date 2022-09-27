@@ -1,8 +1,15 @@
 package visualization
 
+import BISHOP_MASK
 import Board
 import Coords
+import KING_MASK
+import KNIGHT_MASK
 import Move
+import NONE
+import PAWN_MASK
+import QUEEN_MASK
+import ROOK_MASK
 import getPieceRepresentation
 import isWhite
 import player
@@ -11,6 +18,8 @@ import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Graphics
 import java.awt.Graphics2D
+import java.awt.event.KeyEvent
+import java.awt.event.KeyListener
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.awt.image.BufferedImage
@@ -21,7 +30,7 @@ import javax.swing.JFrame
 import javax.swing.JPanel
 import kotlin.math.floor
 
-class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(), MouseListener {
+class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(), MouseListener, KeyListener {
 
     val SQUARE_SIZE = 80
 
@@ -107,6 +116,7 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
 
     init {
         this.addMouseListener(this)
+        frame.addKeyListener(this)
     }
 
     override fun mousePressed(e: MouseEvent?) {
@@ -125,6 +135,7 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
                 } else {
                     // execute the move
                     board.movePiece(Move(it, clickedSquare, board.piece(it).player))
+                    selectedSquare = null
                 }
             }
         }
@@ -135,6 +146,32 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
     override fun mouseClicked(e: MouseEvent?) {}
     override fun mouseEntered(e: MouseEvent?) {}
     override fun mouseExited(e: MouseEvent?) {}
+
+    override fun keyPressed(e: KeyEvent?) {
+        e ?: throw RuntimeException("AWT encountered an error while handing us a mouse event.")
+
+        var piece = when(e.keyCode.toChar()) {
+            'P' -> PAWN_MASK
+            'N' -> KNIGHT_MASK
+            'B' -> BISHOP_MASK
+            'R' -> ROOK_MASK
+            'Q' -> QUEEN_MASK
+            'K' -> KING_MASK
+            else -> return@keyPressed
+        }
+
+        piece += (if (e.isShiftDown) Player.BLACK.mask else Player.WHITE.mask)
+
+        selectedSquare?.let {
+            board.pieces[it.x][it.y] = piece
+            selectedSquare = null
+        }
+
+        requestRepaint()
+    }
+    override fun keyReleased(e: KeyEvent?) {}
+    override fun keyTyped(e: KeyEvent?) {}
+
 
 
     fun requestRepaint() {

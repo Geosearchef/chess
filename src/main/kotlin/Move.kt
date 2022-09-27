@@ -128,7 +128,11 @@ fun getPossibleMovesForPiece(board: Board, player: Player, coords: Coords, piece
         // TODO: castle
     } else if(piece.isPawn()) {
         (if(piece.isWhite()) possibleOffsetsPawnWhite else possibleOffsetsPawnBlack).forEach {
-            possibleMoves.add(Move(coords, coords + it, player))
+            val target = coords + it
+
+            if(target.isInBounds(board) && board.empty(target)) {
+                possibleMoves.add(Move(coords, target, player))
+            }
         }
 
         (if(piece.isWhite()) possibleAttackOffsetsPawnWhite else possibleAttackOffsetsPawnBlack).forEach {
