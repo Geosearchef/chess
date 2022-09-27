@@ -7,6 +7,7 @@ import kotlin.collections.ArrayList
 class Board(init: Boolean = true, val size: Int = 8) {
 
     val pieces: Array<Array<Int>> = Array(8) { Array(8) { NONE } }
+    var lastMove: Move? = null
 
     val squares: ArrayList<Coords> = ArrayList<Coords>().apply {
         for(x in indicesX()) {
@@ -59,7 +60,13 @@ class Board(init: Boolean = true, val size: Int = 8) {
         with(move) {
             pieces[to.x][to.y] = pieces[from.x][from.y]
             pieces[from.x][from.y] = NONE
+
+            enPassantTarget?.let {
+                pieces[it.x][it.y] = NONE
+            }
         }
+
+        lastMove = move
     }
 
 

@@ -1,7 +1,8 @@
+import util.math.Vector
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
-data class Move(val from: Coords, val to: Coords, val player: Player) {
+data class Move(val from: Coords, val to: Coords, val player: Player, val enPassantTarget: Coords? = null) {
     override fun toString() = "$from -> $to"
 
     fun isInBounds(board: Board) = from.isInBounds(board) && to.isInBounds(board)
@@ -158,7 +159,20 @@ fun getPossibleMovesForPiece(board: Board, player: Player, coords: Coords, piece
             }
         }
 
-        // TODO: en passant
+        // en passant
+        (if(piece.isWhite()) possibleAttackOffsetsPawnWhite else possibleAttackOffsetsPawnBlack).forEach {
+            val movementTarget = coords + it
+            val opponentTarget = coords + Coords(it.x, 0)
+
+            if(movementTarget.isInBounds(board) && opponentTarget.isInBounds(board)
+                && !board.empty(opponentTarget) && board.piece(opponentTarget).isPlayerColor(player.otherPlayer)
+                && board.lastMove?.to == opponentTarget && board.piece(opponentTarget).isPawn()
+                && board.lastMove?.run { abs(to.y - from.y) } == 2
+                && ((piece.isWhite() && coords.y == 4) || (piece.isBlack() && coords.y == 3))
+            ) {
+                possibleMoves.add(Move(coords, movementTarget, player, enPassantTarget = opponentTarget))
+            }
+        }
     }
 
     possibleMoves.removeIf { ! it.isValid(board) }
