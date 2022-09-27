@@ -64,6 +64,11 @@ class Board(init: Boolean = true, val size: Int = 8) {
             enPassantTarget?.let {
                 pieces[it.x][it.y] = NONE
             }
+
+            // conversion, TODO: this only supports queens at the moment, add conversion target to move obj
+            if((to.y == 0 || to.y == 7) && pieces[to.x][to.y].isPawn()) {
+                pieces[to.x][to.y] = QUEEN_MASK + pieces[to.x][to.y].player.mask
+            }
         }
 
         lastMove = move
