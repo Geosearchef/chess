@@ -8,22 +8,29 @@ class Board(init: Boolean = true, val size: Int = 8) {
     val pieces: Array<Array<Int>> = Array(8) { Array(8) { NONE } }
     var lastMove: Move? = null
 
-    val squares: ArrayList<Coords> = ArrayList<Coords>().apply {
-        for(x in indicesX()) {
-            for(y in indicesY()) {
-                add(Coords(x, y))
-            }
-        }
-    }
+    var squares: ArrayList<Coords> = ArrayList()
 
     constructor(src: Board) : this() {
+        squares = src.squares
+
         squares.forEach {
             pieces[it.x][it.y] = src.pieces[it.x][it.y]
         }
+
         lastMove = src.lastMove
     }
 
     init {
+        if(squares.isEmpty()) {
+            squares = ArrayList<Coords>().apply {
+                for(x in indicesX()) {
+                    for(y in indicesY()) {
+                        add(Coords(x, y))
+                    }
+                }
+            }
+        }
+
         if(init) {
             initializeBoard()
         }

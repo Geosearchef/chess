@@ -11,6 +11,7 @@ import Player
 import QUEEN_MASK
 import ROOK_MASK
 import engine.calculateMoveRanking
+import engine.calculateOptimalMovesIteratively
 import getPieceRepresentation
 import isWhite
 import player
@@ -190,16 +191,16 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
         e ?: throw RuntimeException("AWT encountered an error while handing us a mouse event.")
 
         if(e.keyCode == 32) {
-            println("Calculating move ranking...")
-            val t = System.currentTimeMillis()
-            val moveRanking = calculateMoveRanking(board, playerToMove, iterationDepth = 5, parallel = true)
-            println("Done. Took ${System.currentTimeMillis() - t} ms.")
+            val best = calculateOptimalMovesIteratively(board, playerToMove, iterationDepths = listOf(4, 5, 2), parallel = true)
+            val bestMoves = best.first
+            val bestScore = best.second
 
-            val bestScore = if(playerToMove == Player.WHITE) moveRanking.values.maxOrNull() else moveRanking.values.minOrNull()
             if(bestScore != null) {
                 optimalNextMoves.clear()
-                optimalNextMoves.addAll(moveRanking.filterValues { it == bestScore }.keys)
+                optimalNextMoves.addAll(bestMoves)
             }
+
+            println("Minimum score of best move: $bestScore")
 
             requestRepaint()
 
@@ -275,6 +276,7 @@ fun main(args: Array<String>) {
 
     println("HW threads: ${Runtime.getRuntime().availableProcessors()}")
     println("CommonPoolParallelism: ${ForkJoinPool.getCommonPoolParallelism()}")
+    println()
 
     val board = Board()
     val visualizer = BoardVisualizer(board)

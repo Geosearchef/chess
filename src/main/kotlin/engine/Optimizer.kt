@@ -20,10 +20,10 @@ fun calculateOptimalScore(board: Board, playerToMove: Player, iterationDepth: In
     }
 }
 
-fun calculateMoveRanking(board: Board, playerToMove: Player, iterationDepth: Int = 5, parallel: Boolean = false): Map<Move, Double> {
+fun calculateMoveRanking(board: Board, playerToMove: Player, iterationDepth: Int = 5, parallel: Boolean = false, allowedInitialMoves: List<Move>? = null): Map<Move, Double> {
     val otherPlayer = playerToMove.otherPlayer
 
-    val possibleMoves = board.getPossibleMoves(playerToMove)
+    val possibleMoves = allowedInitialMoves ?: board.getPossibleMoves(playerToMove)
 
     if(!parallel) {
         val possibleScoresByMove = possibleMoves.associateWith { move ->
@@ -44,5 +44,43 @@ fun calculateMoveRanking(board: Board, playerToMove: Player, iterationDepth: Int
 
         return possibleScoresByMove
     }
+}
+
+fun calculateMoveRankingIteratively(board: Board, playerToMove: Player, iterationDepths: List<Int> = listOf(4, 6, 8), parallel: Boolean = false): Map<Move, Double> {
+    var allowedInitialMoves = board.getPossibleMoves(playerToMove)
+    var lastRanking: Map<Move, Double> = mapOf()
+
+    println("\nCalculating move ranking...")
+    val startTimeAll = System.currentTimeMillis()
+
+    for(iterationDepth in iterationDepths) {
+        val startTimeIteration = System.currentTimeMillis()
+
+        val ranking = calculateMoveRanking(board, playerToMove, iterationDepth, parallel, allowedInitialMoves)
+        val bestScore = if(playerToMove == Player.WHITE) ranking.values.maxOrNull() else ranking.values.minOrNull()
+        val bestMoves = ranking.filterValues { it == bestScore }.keys
+
+        allowedInitialMoves = bestMoves.toList()
+
+        lastRanking = ranking
+
+        println("Depth: $iterationDepth, t: ${System.currentTimeMillis() - startTimeIteration} ms, remaining: ${bestMoves.size}")
+
+        if(bestMoves.size <= 1) {
+            break
+        }
+    }
+
+    println("Done. Took ${System.currentTimeMillis() - startTimeAll} ms.\n")
+
+    return lastRanking
+}
+
+fun calculateOptimalMovesIteratively(board: Board, playerToMove: Player, iterationDepths: List<Int> = listOf(4, 6, 8), parallel: Boolean = false): Pair<Set<Move>, Double?> {
+    val ranking = calculateMoveRankingIteratively(board, playerToMove, iterationDepths, parallel)
+    val bestScore = if(playerToMove == Player.WHITE) ranking.values.maxOrNull() else ranking.values.minOrNull()
+    val bestMoves = ranking.filterValues { it == bestScore }.keys
+
+    return bestMoves to bestScore
 }
 

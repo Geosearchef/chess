@@ -25,6 +25,8 @@ val ROOK_BLACK: Int = ROOK_MASK + Player.BLACK.mask
 val QUEEN_BLACK: Int = QUEEN_MASK + Player.BLACK.mask
 val KING_BLACK: Int = KING_MASK + Player.BLACK.mask
 
+val KNIGHT_BISHOP_QUEEN_MASK = KNIGHT_MASK.or(BISHOP_MASK).or(QUEEN_MASK)
+
 fun Int.getPieceRepresentation(): String {
     var key = "."
     if(this.isPawn()) {
@@ -63,4 +65,8 @@ fun Int.isPlayerColor(player: Player) = if(player == Player.WHITE) this.isWhite(
 val Int.player get() = if(this.isWhite()) Player.WHITE else Player.BLACK
 
 fun Int.moved() = MOVED_MASK.and(this) != 0
+
+
+// optimization
+fun Int.isKnightBishopOrQueen() = this.and(KNIGHT_BISHOP_QUEEN_MASK) != 0
 
