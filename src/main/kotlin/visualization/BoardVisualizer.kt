@@ -6,7 +6,6 @@ import Coords
 import KING_MASK
 import KNIGHT_MASK
 import Move
-import NONE
 import PAWN_MASK
 import QUEEN_MASK
 import ROOK_MASK
@@ -134,7 +133,17 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
                     selectedSquare = clickedSquare
                 } else {
                     // execute the move
-                    board.movePiece(Move(it, clickedSquare, board.piece(it).player))
+                    val possibleMoves = board.getPossibleMovesForPiece(it)
+                    val possibleMove = possibleMoves.find { it.to == clickedSquare }
+
+                    if(possibleMove != null) {
+                        board.movePiece(possibleMove)
+                    } else {
+                        val illegalMove = Move(it, clickedSquare, board.piece(it).player)
+                        println("Executing illegal move: $illegalMove")
+                        board.movePiece(illegalMove)
+                    }
+
                     selectedSquare = null
                 }
             }
