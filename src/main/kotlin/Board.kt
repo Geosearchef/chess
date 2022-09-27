@@ -1,6 +1,5 @@
-import Player.BLACK
 import Player.WHITE
-import java.util.*
+import engine.Evaluator
 import kotlin.collections.ArrayList
 
 
@@ -107,6 +106,7 @@ class Board(init: Boolean = true, val size: Int = 8) {
         println(this.toString())
     }
 
+    fun clone() = Board(this)
 
     fun getPossibleMoves(player: Player) = getPossibleMovesForBoard(this, player)
     fun getPossibleMovesForPiece(coords: Coords) = getPossibleMovesForPiece(this, piece(coords).player, coords, piece(coords))

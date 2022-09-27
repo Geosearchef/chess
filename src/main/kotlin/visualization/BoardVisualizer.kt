@@ -9,6 +9,7 @@ import Move
 import PAWN_MASK
 import QUEEN_MASK
 import ROOK_MASK
+import engine.calculateMoveRanking
 import getPieceRepresentation
 import isWhite
 import player
@@ -24,6 +25,7 @@ import java.awt.event.MouseListener
 import java.awt.image.BufferedImage
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.concurrent.ForkJoinPool
 import javax.imageio.ImageIO
 import javax.swing.JFrame
 import javax.swing.JPanel
@@ -39,7 +41,10 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
     val SQUARE_COLOR_DARK = Color(125, 148, 93, 255)
     val SQUARE_COLOR_LIGHT = Color(238, 238, 213, 255)
     val SELECTOR_COLOR = Color(0, 0, 0, 255)
-    val POSSIBLE_MOVE_TARGET_COLOR = Color(255, 197, 102, 255)
+//    val POSSIBLE_MOVE_TARGET_COLOR = Color(255, 197, 102, 255)
+    val POSSIBLE_MOVE_TARGET_COLOR = Color(201, 214, 86, 255)
+    val OPTIMAL_MOVE_TARGET_COLOR = Color(255, 197, 102, 255)
+    val OPTIMAL_MOVE_PIECE_COLOR = Color(255, 197, 102, 255)
 
     val frame = JFrame("CE").apply {
         defaultCloseOperation = JFrame.EXIT_ON_CLOSE
@@ -52,6 +57,7 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
     }
 
     var selectedSquare: Coords? = null
+    var optimalNextMoves: MutableList<Move> = ArrayList()
 
     companion object {
         val images = HashMap<String, BufferedImage>()
@@ -78,8 +84,23 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
                 val screenSpacePos = boardToScreenSpace(square)
                 fillRect(screenSpacePos, SQUARE_SIZE, SQUARE_SIZE)
 
-                if(selectedSquare == square) {
-                    color = SELECTOR_COLOR
+                var optimalNextSource = optimalNextMoves.any { it.from == square }
+                var optimalNextTarget = optimalNextMoves.any { it.to == square }
+                val squareSelected = selectedSquare == square
+
+                var borderColor: Color? = null
+                if(optimalNextSource) {
+                    borderColor = OPTIMAL_MOVE_PIECE_COLOR
+                }
+                if(optimalNextTarget) {
+                    borderColor = OPTIMAL_MOVE_TARGET_COLOR
+                }
+                if(squareSelected) {
+                    borderColor = SELECTOR_COLOR
+                }
+
+                if(borderColor != null) {
+                    color = borderColor
                     val oldStroke = stroke
                     stroke = BasicStroke(4f) // this is a basic stroke with a width of three, hf pronouncing that
                     drawRect(screenSpacePos + Vector(2.0, 2.0), SQUARE_SIZE - 4, SQUARE_SIZE - 4)
@@ -144,6 +165,8 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
                         board.movePiece(illegalMove)
                     }
 
+                    optimalNextMoves.clear()
+
                     selectedSquare = null
                 }
             }
@@ -158,6 +181,23 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
 
     override fun keyPressed(e: KeyEvent?) {
         e ?: throw RuntimeException("AWT encountered an error while handing us a mouse event.")
+
+        if(e.keyCode == 32) {
+            println("Calculating move ranking...")
+            val t = System.currentTimeMillis()
+            val moveRanking = calculateMoveRanking(board, Player.WHITE, iterationDepth = 5, parallel = true)
+            println("Done. Took ${System.currentTimeMillis() - t} ms.")
+
+            val maxScore = moveRanking.values.maxOrNull()
+            if(maxScore != null) {
+                optimalNextMoves.clear()
+                optimalNextMoves.addAll(moveRanking.filterValues { it == maxScore }.keys)
+            }
+
+            requestRepaint()
+
+            return
+        }
 
         var piece = when(e.keyCode.toChar()) {
             'P' -> PAWN_MASK
@@ -204,6 +244,11 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
 
 
 fun main(args: Array<String>) {
+    System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", "12")
+
+    println("HW threads: ${Runtime.getRuntime().availableProcessors()}")
+    println("CommonPoolParallelism: ${ForkJoinPool.getCommonPoolParallelism()}")
+
     val board = Board()
     val visualizer = BoardVisualizer(board)
 

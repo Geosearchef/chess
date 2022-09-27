@@ -1,3 +1,13 @@
+package engine
+
+import Board
+import isBishop
+import isKing
+import isKnight
+import isPawn
+import isQueen
+import isRook
+import isWhite
 
 class Evaluator(val board: Board) {
     fun evaluate(): Double {
