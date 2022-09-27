@@ -21,6 +21,7 @@ class Board(init: Boolean = true, val size: Int = 8) {
         squares.forEach {
             pieces[it.x][it.y] = src.pieces[it.x][it.y]
         }
+        lastMove = src.lastMove
     }
 
     init {
@@ -68,6 +69,16 @@ class Board(init: Boolean = true, val size: Int = 8) {
             // conversion, TODO: this only supports queens at the moment, add conversion target to move obj
             if((to.y == 0 || to.y == 7) && pieces[to.x][to.y].isPawn()) {
                 pieces[to.x][to.y] = QUEEN_MASK + pieces[to.x][to.y].player.mask
+            }
+
+            // set as moved
+            pieces[to.x][to.y] = pieces[to.x][to.y].or(MOVED_MASK)
+
+            // castle
+            if(pieces[to.x][to.y].isKing()) {
+                castleRookMove?.let {
+                    movePiece(it)
+                }
             }
         }
 

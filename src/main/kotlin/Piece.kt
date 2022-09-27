@@ -2,6 +2,8 @@ import java.util.*
 
 val NONE: Int = 0b00000000
 
+val MOVED_MASK: Int = 0b10000000
+
 val PAWN_MASK: Int = 0b00000001
 val KNIGHT_MASK: Int = 0b00000010
 val BISHOP_MASK: Int = 0b00000100
@@ -59,3 +61,6 @@ fun Int.isWhite() = !this.isBlack()
 fun Int.isBlack() = Player.BLACK.mask.and(this) != 0
 fun Int.isPlayerColor(player: Player) = if(player == Player.WHITE) this.isWhite() else this.isBlack()
 val Int.player get() = if(this.isWhite()) Player.WHITE else Player.BLACK
+
+fun Int.moved() = MOVED_MASK.and(this) != 0
+

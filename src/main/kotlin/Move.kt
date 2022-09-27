@@ -2,7 +2,7 @@ import util.math.Vector
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
-data class Move(val from: Coords, val to: Coords, val player: Player, val enPassantTarget: Coords? = null) {
+data class Move(val from: Coords, val to: Coords, val player: Player, val enPassantTarget: Coords? = null, val castleRookMove: Move? = null) {
     override fun toString() = "$from -> $to"
 
     fun isInBounds(board: Board) = from.isInBounds(board) && to.isInBounds(board)
@@ -131,7 +131,41 @@ fun getPossibleMovesForPiece(board: Board, player: Player, coords: Coords, piece
     } else if(piece.isKing()) {
         possibleOffsetsKing.forEach { possibleMoves.add(Move(coords, coords + it, player)) }
 
-        // TODO: castle
+        // castle
+        if(!piece.moved()) {
+            val leftRookCoords = Coords(0, coords.y) // this is relative to playing black, as the board is rotated this way in memory
+            val rightRookCoords = Coords(7, coords.y)
+            val leftRook = board.piece(leftRookCoords)
+            val rightRook = board.piece(rightRookCoords)
+
+            if(leftRook.isRook() && leftRook.player == piece.player && !leftRook.moved()) {
+                val squaresBetween = listOf(Coords(1, coords.y), Coords(2, coords.y))
+                val allRelevantSquares = squaresBetween.union(listOf(coords, leftRookCoords))
+
+                if(squaresBetween.all { board.empty(it) }) {
+                    //TODO: check check
+                    possibleMoves.add(Move(
+                        coords, Coords(1, coords.y), player,
+                        castleRookMove = Move(leftRookCoords, Coords(2, coords.y), player)
+                    ))
+                }
+            }
+            if(rightRook.isRook() && rightRook.player == piece.player && !rightRook.moved()) {
+                val squaresBetween = listOf(Coords(4, coords.y), Coords(5, coords.y), Coords(6, coords.y))
+                val allRelevantSquares = squaresBetween.union(listOf(coords, rightRookCoords))
+
+                if(squaresBetween.all { board.empty(it) }) {
+                    //TODO: check check
+                    possibleMoves.add(Move(
+                        coords, Coords(5, coords.y), player,
+                        castleRookMove = Move(rightRookCoords, Coords(4, coords.y), player)
+                    ))
+                }
+            }
+        }
+
+
+
     } else if(piece.isPawn()) {
         if((piece.isWhite() && coords.y == 1) || (piece.isBlack() && coords.y == 6)) {
             (if(piece.isWhite()) possibleOffsetsBasePawnWhite else possibleOffsetsBasePawnBlack).forEach {
