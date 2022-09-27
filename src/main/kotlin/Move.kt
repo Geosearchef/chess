@@ -18,7 +18,7 @@ data class Move(val from: Coords, val to: Coords, val player: Player) {
             return true
         }
 
-        val rookOrQueen = vec.x == 0 || vec.y == 0
+        val rookOrQueen = vec.x == 0 || vec.y == 0  // will also include pawn on initial 2 square move
         val bishopOrQueen = abs(vec.x) == abs(vec.y)
         if(rookOrQueen || bishopOrQueen) {
             val vecNormalized = vec.sign()
@@ -46,11 +46,16 @@ data class Move(val from: Coords, val to: Coords, val player: Player) {
 val possibleOffsetsPawnWhite = listOf(
     Coords(0, 1)
 )
+val possibleOffsetsBasePawnWhite = listOf(
+    Coords(0, 1),
+    Coords(0, 2),
+)
 val possibleAttackOffsetsPawnWhite = listOf(
     Coords(-1, 1),
     Coords( 1, 1)
 )
 val possibleOffsetsPawnBlack = possibleOffsetsPawnWhite.map { Coords(it.x, -it.y) }
+val possibleOffsetsBasePawnBlack = possibleOffsetsBasePawnWhite.map { Coords(it.x, -it.y) }
 val possibleAttackOffsetsPawnBlack = possibleAttackOffsetsPawnWhite.map { Coords(it.x, -it.y) }
 
 
@@ -127,11 +132,21 @@ fun getPossibleMovesForPiece(board: Board, player: Player, coords: Coords, piece
 
         // TODO: castle
     } else if(piece.isPawn()) {
-        (if(piece.isWhite()) possibleOffsetsPawnWhite else possibleOffsetsPawnBlack).forEach {
-            val target = coords + it
+        if((piece.isWhite() && coords.y == 1) || (piece.isBlack() && coords.y == 6)) {
+            (if(piece.isWhite()) possibleOffsetsBasePawnWhite else possibleOffsetsBasePawnBlack).forEach {
+                val target = coords + it
 
-            if(target.isInBounds(board) && board.empty(target)) {
-                possibleMoves.add(Move(coords, target, player))
+                if(target.isInBounds(board) && board.empty(target)) {
+                    possibleMoves.add(Move(coords, target, player))
+                }
+            }
+        } else {
+            (if(piece.isWhite()) possibleOffsetsPawnWhite else possibleOffsetsPawnBlack).forEach {
+                val target = coords + it
+
+                if(target.isInBounds(board) && board.empty(target)) {
+                    possibleMoves.add(Move(coords, target, player))
+                }
             }
         }
 
