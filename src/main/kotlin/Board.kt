@@ -54,6 +54,14 @@ class Board(init: Boolean = true, val size: Int = 8) {
         pieces[3][7] = KING_BLACK
     }
 
+    // assumes the move is legal, no verification
+    fun movePiece(move: Move) {
+        with(move) {
+            pieces[to.x][to.y] = pieces[from.x][from.y]
+            pieces[from.x][from.y] = NONE
+        }
+    }
+
 
     override fun toString(): String {
         val sb = StringBuilder()
@@ -78,6 +86,7 @@ class Board(init: Boolean = true, val size: Int = 8) {
 
 
     fun getPossibleMoves(player: Player) = getPossibleMovesForBoard(this, player)
+    fun getPossibleMovesForPiece(coords: Coords) = getPossibleMovesForPiece(this, piece(coords).player, coords, piece(coords))
 
     fun piece(coords: Coords) = pieces[coords.x][coords.y]
     fun empty(coords: Coords) = piece(coords) == NONE

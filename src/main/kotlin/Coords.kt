@@ -13,6 +13,10 @@ class Coords(val x: Int, val y: Int) {
     fun isInBounds(board: Board) = x >= 0 && y >= 0 && x < board.size && y < board.size
 
     fun sign() = Coords(this.x.sign, this.y.sign)
+
+    override fun equals(other: Any?): Boolean {
+        return (other as? Coords)?.let { it.x == this.x && it.y == this.y } ?: false
+    }
 }
 
 fun String.toCoords() = Coords(this)
