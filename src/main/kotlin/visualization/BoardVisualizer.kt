@@ -216,7 +216,7 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
             return
         }
 
-        if(e.keyCode == 13) {
+        if(e.keyCode == 10) {
             optimalNextMoves.random().let {
                 executeMove(it.from, it.to)
             }
