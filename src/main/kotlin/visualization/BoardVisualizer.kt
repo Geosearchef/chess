@@ -7,6 +7,7 @@ import KING_MASK
 import KNIGHT_MASK
 import Move
 import PAWN_MASK
+import Player
 import QUEEN_MASK
 import ROOK_MASK
 import engine.calculateMoveRanking
@@ -58,6 +59,8 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
 
     var selectedSquare: Coords? = null
     var optimalNextMoves: MutableList<Move> = ArrayList()
+
+    var playerToMove: Player = Player.WHITE
 
     companion object {
         val images = HashMap<String, BufferedImage>()
@@ -131,7 +134,22 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
         }
     }
 
+    fun executeMove(from: Coords, to: Coords) {
+        val possibleMoves = board.getPossibleMovesForPiece(from)
+        val possibleMove = possibleMoves.find { it.to == to }
 
+        if(possibleMove != null) {
+            board.movePiece(possibleMove)
+        } else {
+            val illegalMove = Move(from, to, board.piece(from).player)
+            println("Executing illegal move: $illegalMove")
+            board.movePiece(illegalMove)
+        }
+
+        optimalNextMoves.clear()
+        playerToMove = playerToMove.otherPlayer
+        println("Next move: $playerToMove")
+    }
 
 
     init {
@@ -154,18 +172,7 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
                     selectedSquare = clickedSquare
                 } else {
                     // execute the move
-                    val possibleMoves = board.getPossibleMovesForPiece(it)
-                    val possibleMove = possibleMoves.find { it.to == clickedSquare }
-
-                    if(possibleMove != null) {
-                        board.movePiece(possibleMove)
-                    } else {
-                        val illegalMove = Move(it, clickedSquare, board.piece(it).player)
-                        println("Executing illegal move: $illegalMove")
-                        board.movePiece(illegalMove)
-                    }
-
-                    optimalNextMoves.clear()
+                    executeMove(it, clickedSquare)
 
                     selectedSquare = null
                 }
@@ -185,13 +192,33 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false) : JPanel(),
         if(e.keyCode == 32) {
             println("Calculating move ranking...")
             val t = System.currentTimeMillis()
-            val moveRanking = calculateMoveRanking(board, Player.WHITE, iterationDepth = 5, parallel = true)
+            val moveRanking = calculateMoveRanking(board, playerToMove, iterationDepth = 5, parallel = true)
             println("Done. Took ${System.currentTimeMillis() - t} ms.")
 
-            val maxScore = moveRanking.values.maxOrNull()
-            if(maxScore != null) {
+            val bestScore = if(playerToMove == Player.WHITE) moveRanking.values.maxOrNull() else moveRanking.values.minOrNull()
+            if(bestScore != null) {
                 optimalNextMoves.clear()
-                optimalNextMoves.addAll(moveRanking.filterValues { it == maxScore }.keys)
+                optimalNextMoves.addAll(moveRanking.filterValues { it == bestScore }.keys)
+            }
+
+            requestRepaint()
+
+            return
+        }
+
+        if(e.keyCode == 9) {
+            playerToMove = playerToMove.otherPlayer
+
+            println("Next move: $playerToMove")
+
+            requestRepaint()
+
+            return
+        }
+
+        if(e.keyCode == 13) {
+            optimalNextMoves.random().let {
+                executeMove(it.from, it.to)
             }
 
             requestRepaint()
