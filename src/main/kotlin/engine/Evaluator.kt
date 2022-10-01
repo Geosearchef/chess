@@ -14,6 +14,8 @@ import isQueen
 import isRook
 import isWhite
 
+const val KING_SCORE = 2000.0
+
 const val MOBILITY_FACTOR = 0.05
 const val DEVELOPMENT_FACTOR = 1.0
 const val PAWN_FACTOR = 1.0
@@ -21,6 +23,16 @@ const val PAWN_FACTOR = 1.0
 class Evaluator(val board: Board) {
     fun evaluate(): Double {
         var score = 0.0
+
+        if(board.kingTaken) {
+            if(board.whiteKingTaken) {
+                score -= KING_SCORE
+            }
+            if(board.blackKingTaken) {
+                score += KING_SCORE
+            }
+            return score
+        }
 
         score += evaluateMaterial()
         score += evaluatePawns() * PAWN_FACTOR
@@ -105,7 +117,7 @@ class Evaluator(val board: Board) {
             } else if(piece.isQueen()) {
                 pieceScore = 9.0
             } else if(piece.isKing()) {
-                pieceScore = 200.0  // max sum of all others is 103
+                pieceScore = KING_SCORE  // max sum of all others is 103
             }
 
             if(piece.isWhite()) {

@@ -156,6 +156,8 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false, val iterati
 
         optimalNextMoves.clear()
         playerToMove = playerToMove.otherPlayer
+
+        println("Hash: ${board.hash}")
         println("Next move: $playerToMove")
     }
 
@@ -296,7 +298,7 @@ fun main(args: Array<String>) {
     println()
 
     val board = Board()
-    val visualizer = BoardVisualizer(board, iterationDepths = listOf(4, 5, 2), autoPlay = true)
+    val visualizer = BoardVisualizer(board, iterationDepths = listOf(4, 5, 2), autoPlay = false, invert = false)
 
     visualizer.requestRepaint()
 }

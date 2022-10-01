@@ -11,6 +11,11 @@ fun calculateOptimalScore(board: Board, playerToMove: Player, iterationDepth: In
         return Evaluator(board).evaluate()
     }
 
+    // optimization - abort branch
+    if(board.kingTaken) {
+        return Evaluator(board).evaluate() * (iterationDepth.toDouble() + 1.0) // prefer earlier checkmates, avoid stalling
+    }
+
     val possibleScoresByMove = calculateMoveRanking(board, playerToMove, iterationDepth)
 
     if(playerToMove == Player.WHITE) {

@@ -11,6 +11,10 @@ val ROOK_MASK: Int = 0b00001000
 val QUEEN_MASK: Int = 0b00010000
 val KING_MASK: Int = 0b00100000
 
+val PIECE_MASKS = listOf(
+    PAWN_MASK, KNIGHT_MASK, BISHOP_MASK, ROOK_MASK, QUEEN_MASK, KING_MASK
+)
+
 val PAWN_WHITE: Int = PAWN_MASK + Player.WHITE.mask
 val KNIGHT_WHITE: Int = KNIGHT_MASK + Player.WHITE.mask
 val BISHOP_WHITE: Int = BISHOP_MASK + Player.WHITE.mask
@@ -26,6 +30,8 @@ val QUEEN_BLACK: Int = QUEEN_MASK + Player.BLACK.mask
 val KING_BLACK: Int = KING_MASK + Player.BLACK.mask
 
 val KNIGHT_BISHOP_QUEEN_MASK = KNIGHT_MASK.or(BISHOP_MASK).or(QUEEN_MASK)
+val WHITE_KING_MASK = Player.WHITE.mask.or(KING_MASK)
+val BLACK_KING_MASK = Player.BLACK.mask.or(KING_MASK)
 
 fun Int.getPieceRepresentation(): String {
     var key = "."
@@ -69,4 +75,6 @@ fun Int.moved() = MOVED_MASK.and(this) != 0
 
 // optimization
 fun Int.isKnightBishopOrQueen() = this.and(KNIGHT_BISHOP_QUEEN_MASK) != 0
+fun Int.isWhiteKing() = this.and(WHITE_KING_MASK) != 0
+fun Int.isBlackKing() = this.and(BLACK_KING_MASK) != 0
 

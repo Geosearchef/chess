@@ -1,5 +1,7 @@
 import Player.WHITE
 import engine.Evaluator
+import optimization.ZobristHashing
+import optimization.ZobristTable
 import kotlin.collections.ArrayList
 
 
@@ -8,7 +10,16 @@ class Board(init: Boolean = true, val size: Int = 8) {
     val pieces: Array<Array<Int>> = Array(8) { Array(8) { NONE } }
     var lastMove: Move? = null
 
+    var hash: Long = 0L
+
     var squares: ArrayList<Coords> = ArrayList()
+
+    // optimization
+    var whiteKingTaken = false
+        private set
+    var blackKingTaken = false
+        private set
+    val kingTaken get() = whiteKingTaken || blackKingTaken
 
     constructor(src: Board) : this() {
         squares = src.squares
@@ -60,11 +71,33 @@ class Board(init: Boolean = true, val size: Int = 8) {
         pieces[3][0] = KING_WHITE
         pieces[4][7] = QUEEN_BLACK
         pieces[3][7] = KING_BLACK
+
+        initializeHash()
+    }
+
+    fun initializeHash() {
+        ZobristHashing.recalculateHash(this)
     }
 
     // assumes the move is legal, no verification
     fun movePiece(move: Move) {
         with(move) {
+            // check king (optimization)
+            val targetPiece = pieces[to.x][to.y]
+            if(targetPiece.isKing()) {
+                if(targetPiece.isWhite()) {
+                    whiteKingTaken = true
+                } else if(targetPiece.isBlack()) {
+                    blackKingTaken = true
+                }
+            }
+
+            // adapt hash of taken target piece, NONE has an indicator of 0L
+            hash = hash.xor(ZobristTable.pieceIndicator[to.x][to.y][targetPiece])
+            // adapt hash of source piece
+            hash = hash.xor(ZobristTable.pieceIndicator[from.x][from.y][pieces[from.x][from.y]])
+
+            // move
             pieces[to.x][to.y] = pieces[from.x][from.y]
             pieces[from.x][from.y] = NONE
 
@@ -80,6 +113,9 @@ class Board(init: Boolean = true, val size: Int = 8) {
             // set as moved
             pieces[to.x][to.y] = pieces[to.x][to.y].or(MOVED_MASK)
 
+            // adapt hash to new piece
+            hash = hash.xor(ZobristTable.pieceIndicator[to.x][to.y][pieces[to.x][to.y]])
+
             // castle
             if(pieces[to.x][to.y].isKing()) {
                 castleRookMove?.let {
@@ -89,6 +125,8 @@ class Board(init: Boolean = true, val size: Int = 8) {
         }
 
         lastMove = move
+
+        hash = hash.xor(ZobristTable.blackMoveIndicator)
     }
 
 
