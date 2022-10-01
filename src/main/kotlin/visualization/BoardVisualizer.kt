@@ -14,6 +14,7 @@ import engine.calculateMoveRanking
 import engine.calculateOptimalMovesIteratively
 import getPieceRepresentation
 import isWhite
+import optimization.TranspositionTable
 import player
 import util.math.Vector
 import java.awt.BasicStroke
@@ -157,7 +158,7 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false, val iterati
         optimalNextMoves.clear()
         playerToMove = playerToMove.otherPlayer
 
-        println("Hash: ${board.hash}")
+//        println("Hash: ${board.hash}")
         println("Next move: $playerToMove")
     }
 
@@ -210,7 +211,9 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false, val iterati
         e ?: throw RuntimeException("AWT encountered an error while handing us a mouse event.")
 
         if(e.keyCode == 32) {
-            val best = calculateOptimalMovesIteratively(board, playerToMove, iterationDepths = iterationDepths, parallel = true)
+            val transpositionTable = TranspositionTable()
+
+            val best = calculateOptimalMovesIteratively(board, playerToMove, transpositionTable, iterationDepths = iterationDepths, parallel = true)
             val bestMoves = best.first
             val bestScore = best.second
 
@@ -298,7 +301,7 @@ fun main(args: Array<String>) {
     println()
 
     val board = Board()
-    val visualizer = BoardVisualizer(board, iterationDepths = listOf(4, 5, 2), autoPlay = false, invert = false)
+    val visualizer = BoardVisualizer(board, iterationDepths = listOf(6, 2), autoPlay = true, invert = false)
 
     visualizer.requestRepaint()
 }
