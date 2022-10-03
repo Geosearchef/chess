@@ -5,14 +5,16 @@ import optimization.ZobristTable
 import kotlin.collections.ArrayList
 
 
-class Board(init: Boolean = true, val size: Int = 8) {
+class Board(init: Boolean = true, val size: Int = 8, var boardPool: BoardPool = BoardPool()) {
+
+    // TODO: when is the BoardPool constructor called? Always or only when used?
 
     val pieces: Array<Array<Int>> = Array(8) { Array(8) { NONE } }
     var lastMove: Move? = null
 
     var hash: Long = 0L
 
-    var squares: ArrayList<Coords> = ArrayList()
+    val squares: ArrayList<Coords> get() = Board.squares
 
     // optimization
     var whiteKingTaken = false
@@ -21,27 +23,36 @@ class Board(init: Boolean = true, val size: Int = 8) {
         private set
     val kingTaken get() = whiteKingTaken || blackKingTaken
 
-    constructor(src: Board) : this() {
-        squares = src.squares
+    constructor(src: Board, boardPool: BoardPool = BoardPool()) : this(init = false, boardPool = boardPool) {
+        initReusedBoard(src)
+    }
 
+    fun initReusedBoard(src: Board) {
         squares.forEach {
             pieces[it.x][it.y] = src.pieces[it.x][it.y]
         }
+        // TODO: reduce 2D to 1D array
+//        System.arraycopy(src.pieces, 0, pieces, 0, size * size)
 
         lastMove = src.lastMove
+
+        hash = src.hash
+
+        whiteKingTaken = src.whiteKingTaken
+        blackKingTaken = src.blackKingTaken
     }
 
-    init {
-        if(squares.isEmpty()) {
-            squares = ArrayList<Coords>().apply {
-                for(x in indicesX()) {
-                    for(y in indicesY()) {
-                        add(Coords(x, y))
-                    }
+    companion object {
+        val squares = ArrayList<Coords>().apply {
+            for(x in 0 until 8) {
+                for(y in 0 until 8) {
+                    add(Coords(x, y))
                 }
             }
         }
+    }
 
+    init {
         if(init) {
             initializeBoard()
         }
@@ -151,7 +162,9 @@ class Board(init: Boolean = true, val size: Int = 8) {
         println(this.toString())
     }
 
-    fun clone() = Board(this)
+    fun clone() = boardPool.getBoard(this)
+    fun cloneWithNewPool() = Board(this, boardPool = BoardPool())
+    fun free() = boardPool.free(this)
 
     fun getPossibleMoves(player: Player) = getPossibleMovesForBoard(this, player)
     fun getPossibleMovesForPiece(coords: Coords) = getPossibleMovesForPiece(this, piece(coords).player, coords, piece(coords))
@@ -161,6 +174,35 @@ class Board(init: Boolean = true, val size: Int = 8) {
 
     fun indicesX() = 0 until size
     fun indicesY() = 0 until size
+
+    // NOT THREAD SAFE!
+    class BoardPool() {
+
+//        val pool = HashSet<Board>()
+        val available = HashSet<Board>()
+        val assigned = HashSet<Board>()
+
+        fun getBoard(src: Board): Board {
+            if(available.isNotEmpty()) {
+                val availableBoard = available.first()
+                available.remove(availableBoard)
+                assigned.add(availableBoard)
+                availableBoard.initReusedBoard(src)
+                return availableBoard
+            } else {
+                val newBoard = Board(src, boardPool = this)
+//                pool.add(newBoard)
+                assigned.add(newBoard)
+                return newBoard
+            }
+        }
+
+        fun free(board: Board) {
+            assigned.remove(board)
+            available.add(board)
+        }
+
+    }
 }
 
 fun main(args: Array<String>) {

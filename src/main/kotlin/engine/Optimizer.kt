@@ -44,13 +44,15 @@ fun calculateMoveRanking(board: Board, playerToMove: Player, transpositionTable:
         val possibleScoresByMove = possibleMoves.associateWith { move ->
             val newBoard = board.clone()
             newBoard.movePiece(move)
-            calculateOptimalScore(newBoard, otherPlayer, transpositionTable, iterationDepth - 1)
+            val optimalScore = calculateOptimalScore(newBoard, otherPlayer, transpositionTable, iterationDepth - 1)
+            newBoard.free()
+            return@associateWith optimalScore
         }
 
         return possibleScoresByMove
     } else {
         val possibleScores = possibleMoves.parallelStream().map { move ->
-            val newBoard = board.clone()
+            val newBoard = board.cloneWithNewPool()
             val newTranspositionTable = transpositionTable.clone()
             newBoard.movePiece(move)
             val optimalScore = calculateOptimalScore(newBoard, otherPlayer, newTranspositionTable, iterationDepth - 1)

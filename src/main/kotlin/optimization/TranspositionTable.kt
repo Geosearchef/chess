@@ -19,14 +19,13 @@ class TranspositionTable(val table: MutableMap<Long, Transposition> = HashMap())
     fun lookup(hash: Long, depth: Int): Transposition? {
         val entry = table[hash + depth]
 
-//        return null
-
         lookups++
 
         if(entry == null || entry.depth != depth) {
             return null
         } else {
             hits++
+//            return null
             return entry
         }
     }
