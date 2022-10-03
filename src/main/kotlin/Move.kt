@@ -121,94 +121,123 @@ fun getPossibleMovesForPiece(board: Board, player: Player, coords: Coords, piece
     }
 
     if(piece.isKnight()) {
-        possibleOffsetsKnight.forEach { possibleMoves.add(Move(coords, coords + it, player)) }
+        possibleMoves.addAll(getPossibleKnightMoves(board, player, coords, piece))
     } else if(piece.isBishop()) {
-        possibleOffsetsBishop.forEach { possibleMoves.add(Move(coords, coords + it, player)) }
+        possibleMoves.addAll(getPossibleBishopMoves(board, player, coords, piece))
     } else if(piece.isRook()) {
-        possibleOffsetsRook.forEach { possibleMoves.add(Move(coords, coords + it, player)) }
+        possibleMoves.addAll(getPossibleRookMoves(board, player, coords, piece))
     } else if(piece.isQueen()) {
-        possibleOffsetsQueen.forEach { possibleMoves.add(Move(coords, coords + it, player)) }
+        possibleMoves.addAll(getPossibleQueenMoves(board, player, coords, piece))
     } else if(piece.isKing()) {
-        possibleOffsetsKing.forEach { possibleMoves.add(Move(coords, coords + it, player)) }
-
-        // castle
-        if(!piece.moved()) {
-            val leftRookCoords = Coords(0, coords.y) // this is relative to playing black, as the board is rotated this way in memory
-            val rightRookCoords = Coords(7, coords.y)
-            val leftRook = board.piece(leftRookCoords)
-            val rightRook = board.piece(rightRookCoords)
-
-            if(leftRook.isRook() && leftRook.player == piece.player && !leftRook.moved()) {
-                val squaresBetween = listOf(Coords(1, coords.y), Coords(2, coords.y))
-                val allRelevantSquares = squaresBetween.union(listOf(coords, leftRookCoords))
-
-                if(squaresBetween.all { board.empty(it) }) {
-                    //TODO: check check
-                    possibleMoves.add(Move(
-                        coords, Coords(1, coords.y), player,
-                        castleRookMove = Move(leftRookCoords, Coords(2, coords.y), player)
-                    ))
-                }
-            }
-            if(rightRook.isRook() && rightRook.player == piece.player && !rightRook.moved()) {
-                val squaresBetween = listOf(Coords(4, coords.y), Coords(5, coords.y), Coords(6, coords.y))
-                val allRelevantSquares = squaresBetween.union(listOf(coords, rightRookCoords))
-
-                if(squaresBetween.all { board.empty(it) }) {
-                    //TODO: check check
-                    possibleMoves.add(Move(
-                        coords, Coords(5, coords.y), player,
-                        castleRookMove = Move(rightRookCoords, Coords(4, coords.y), player)
-                    ))
-                }
-            }
-        }
-
-
-
+        possibleMoves.addAll(getPossibleKingMoves(board, player, coords, piece))
     } else if(piece.isPawn()) {
-        if((piece.isWhite() && coords.y == 1) || (piece.isBlack() && coords.y == 6)) {
-            (if(piece.isWhite()) possibleOffsetsBasePawnWhite else possibleOffsetsBasePawnBlack).forEach {
-                val target = coords + it
+        possibleMoves.addAll(getPossiblePawnMoves(board, player, coords, piece))
+    }
 
-                if(target.isInBounds(board) && board.empty(target)) {
-                    possibleMoves.add(Move(coords, target, player))
-                }
-            }
-        } else {
-            (if(piece.isWhite()) possibleOffsetsPawnWhite else possibleOffsetsPawnBlack).forEach {
-                val target = coords + it
+    possibleMoves.removeIf { ! it.isValid(board) }
+    return possibleMoves
+}
 
-                if(target.isInBounds(board) && board.empty(target)) {
-                    possibleMoves.add(Move(coords, target, player))
-                }
+fun getPossibleKnightMoves(board: Board, player: Player, coords: Coords, piece: Int): List<Move> {
+    return possibleOffsetsKnight.map { Move(coords, coords + it, player) }
+}
+
+fun getPossibleBishopMoves(board: Board, player: Player, coords: Coords, piece: Int): List<Move> {
+    return possibleOffsetsBishop.map { Move(coords, coords + it, player) }
+}
+
+fun getPossibleRookMoves(board: Board, player: Player, coords: Coords, piece: Int): List<Move> {
+    return possibleOffsetsRook.map { Move(coords, coords + it, player) }
+}
+
+fun getPossibleQueenMoves(board: Board, player: Player, coords: Coords, piece: Int): List<Move> {
+    return possibleOffsetsQueen.map { Move(coords, coords + it, player) }
+}
+
+fun getPossibleKingMoves(board: Board, player: Player, coords: Coords, piece: Int): List<Move> {
+    val possibleMoves = ArrayList<Move>()
+    possibleOffsetsKing.forEach { possibleMoves.add(Move(coords, coords + it, player)) }
+
+    // castle
+    if(!piece.moved()) {
+        val leftRookCoords = Coords(0, coords.y) // this is relative to playing black, as the board is rotated this way in memory
+        val rightRookCoords = Coords(7, coords.y)
+        val leftRook = board.piece(leftRookCoords)
+        val rightRook = board.piece(rightRookCoords)
+
+        if(leftRook.isRook() && leftRook.player == piece.player && !leftRook.moved()) {
+            val squaresBetween = listOf(Coords(1, coords.y), Coords(2, coords.y))
+//            val allRelevantSquares = squaresBetween.union(listOf(coords, leftRookCoords))
+
+            if(squaresBetween.all { board.empty(it) }) {
+                //TODO: check check
+                possibleMoves.add(Move(
+                    coords, Coords(1, coords.y), player,
+                    castleRookMove = Move(leftRookCoords, Coords(2, coords.y), player)
+                ))
             }
         }
+        if(rightRook.isRook() && rightRook.player == piece.player && !rightRook.moved()) {
+            val squaresBetween = listOf(Coords(4, coords.y), Coords(5, coords.y), Coords(6, coords.y))
+//            val allRelevantSquares = squaresBetween.union(listOf(coords, rightRookCoords))
 
-        (if(piece.isWhite()) possibleAttackOffsetsPawnWhite else possibleAttackOffsetsPawnBlack).forEach {
-            val target = coords + it
-
-            if(target.isInBounds(board) && !board.empty(target) && board.piece(target).isPlayerColor(player.otherPlayer)) {
-                possibleMoves.add(Move(coords, target, player))
-            }
-        }
-
-        // en passant
-        (if(piece.isWhite()) possibleAttackOffsetsPawnWhite else possibleAttackOffsetsPawnBlack).forEach {
-            val movementTarget = coords + it
-            val opponentTarget = coords + Coords(it.x, 0)
-
-            if(movementTarget.isInBounds(board) && opponentTarget.isInBounds(board)
-                && !board.empty(opponentTarget) && board.piece(opponentTarget).isPlayerColor(player.otherPlayer)
-                && board.lastMove?.to == opponentTarget && board.piece(opponentTarget).isPawn()
-                && board.lastMove?.run { abs(to.y - from.y) } == 2
-                && ((piece.isWhite() && coords.y == 4) || (piece.isBlack() && coords.y == 3))
-            ) {
-                possibleMoves.add(Move(coords, movementTarget, player, enPassantTarget = opponentTarget))
+            if(squaresBetween.all { board.empty(it) }) {
+                //TODO: check check
+                possibleMoves.add(Move(
+                    coords, Coords(5, coords.y), player,
+                    castleRookMove = Move(rightRookCoords, Coords(4, coords.y), player)
+                ))
             }
         }
     }
 
-    possibleMoves.removeIf { ! it.isValid(board) }
+    return possibleMoves
+}
+
+fun getPossiblePawnMoves(board: Board, player: Player, coords: Coords, piece: Int): List<Move> {
+    val possibleMoves = ArrayList<Move>()
+
+    if((coords.y == 1 && piece.isWhite()) || (coords.y == 6 && piece.isBlack())) {
+        (if(piece.isWhite()) possibleOffsetsBasePawnWhite else possibleOffsetsBasePawnBlack).forEach {
+            val target = coords + it
+
+            if(target.isInBounds(board) && board.empty(target)) {
+                possibleMoves.add(Move(coords, target, player))
+            }
+        }
+    } else {
+        (if(piece.isWhite()) possibleOffsetsPawnWhite else possibleOffsetsPawnBlack).forEach {
+            val target = coords + it
+
+            if(target.isInBounds(board) && board.empty(target)) {
+                possibleMoves.add(Move(coords, target, player))
+            }
+        }
+    }
+
+    (if(piece.isWhite()) possibleAttackOffsetsPawnWhite else possibleAttackOffsetsPawnBlack).forEach {
+        val target = coords + it
+
+        if(target.isInBounds(board) && !board.empty(target) && board.piece(target).isPlayerColor(player.otherPlayer)) {
+            possibleMoves.add(Move(coords, target, player))
+        }
+    }
+
+    // en passant
+    (if(piece.isWhite()) possibleAttackOffsetsPawnWhite else possibleAttackOffsetsPawnBlack).forEach {
+        val movementTarget = coords + it
+        val opponentTarget = coords + Coords(it.x, 0)
+
+        if(movementTarget.isInBounds(board) && opponentTarget.isInBounds(board)
+            && board.lastMove?.to == opponentTarget
+            && !board.empty(opponentTarget) && board.piece(opponentTarget).isPlayerColor(player.otherPlayer)
+            && board.piece(opponentTarget).isPawn()
+            && board.lastMove?.run { abs(to.y - from.y) } == 2
+            && ((piece.isWhite() && coords.y == 4) || (piece.isBlack() && coords.y == 3))
+        ) {
+            possibleMoves.add(Move(coords, movementTarget, player, enPassantTarget = opponentTarget))
+        }
+    }
+
     return possibleMoves
 }
