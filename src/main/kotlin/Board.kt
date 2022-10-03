@@ -2,7 +2,9 @@ import Player.WHITE
 import engine.Evaluator
 import optimization.ZobristHashing
 import optimization.ZobristTable
+import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 
 
 class Board(init: Boolean = true, val size: Int = 8, var boardPool: BoardPool = BoardPool()) {
@@ -179,13 +181,12 @@ class Board(init: Boolean = true, val size: Int = 8, var boardPool: BoardPool = 
     class BoardPool() {
 
 //        val pool = HashSet<Board>()
-        val available = HashSet<Board>()
+        val available: Queue<Board> = LinkedList()
         val assigned = HashSet<Board>()
 
         fun getBoard(src: Board): Board {
             if(available.isNotEmpty()) {
-                val availableBoard = available.first()
-                available.remove(availableBoard)
+                val availableBoard = available.poll()
                 assigned.add(availableBoard)
                 availableBoard.initReusedBoard(src)
                 return availableBoard
