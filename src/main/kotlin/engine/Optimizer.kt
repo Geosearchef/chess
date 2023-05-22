@@ -5,9 +5,11 @@ import Move
 import Player
 import optimization.TranspositionTable
 import java.util.stream.Collectors
+import kotlin.math.max
+import kotlin.math.min
 
 
-fun calculateOptimalScore(board: Board, playerToMove: Player, transpositionTable: TranspositionTable, iterationDepth: Int = 5): Double {
+fun calculateOptimalScore(board: Board, playerToMove: Player, transpositionTable: TranspositionTable, iterationDepth: Int = 5, alpha: Double, beta: Double): Double {
     if(iterationDepth <= 0) {
         return Evaluator(board).evaluate()
     }
@@ -21,7 +23,7 @@ fun calculateOptimalScore(board: Board, playerToMove: Player, transpositionTable
         return@calculateOptimalScore transposition.score
     }
 
-    val possibleScoresByMove = calculateMoveRanking(board, playerToMove, transpositionTable, iterationDepth)
+    val possibleScoresByMove = calculateMoveRanking(board, playerToMove, transpositionTable, iterationDepth, alpha = alpha, beta = beta)
 
     var optimalScore = 0.0
     if(playerToMove == Player.WHITE) {
@@ -35,19 +37,51 @@ fun calculateOptimalScore(board: Board, playerToMove: Player, transpositionTable
     return optimalScore
 }
 
-fun calculateMoveRanking(board: Board, playerToMove: Player, transpositionTable: TranspositionTable, iterationDepth: Int = 5, parallel: Boolean = false, allowedInitialMoves: List<Move>? = null): Map<Move, Double> {
+fun calculateMoveRanking(
+    board: Board,
+    playerToMove: Player,
+    transpositionTable: TranspositionTable,
+    iterationDepth: Int = 5,
+    parallel: Boolean = false,
+    allowedInitialMoves: List<Move>? = null,
+    alpha: Double = -100000.0,
+    beta: Double = +100000.0
+): Map<Move, Double> {
     val otherPlayer = playerToMove.otherPlayer
 
     val possibleMoves = allowedInitialMoves ?: board.getPossibleMoves(playerToMove)
 
     if(!parallel) {
-        val possibleScoresByMove = possibleMoves.associateWith { move ->
+        val possibleScoresByMove = HashMap<Move, Double>()
+
+        var currentAlpha = alpha
+        var currentBeta = beta
+
+        for (move in possibleMoves) {
             val newBoard = board.clone()
             newBoard.movePiece(move)
-            val optimalScore = calculateOptimalScore(newBoard, otherPlayer, transpositionTable, iterationDepth - 1)
+            val optimalScore = calculateOptimalScore(newBoard, otherPlayer, transpositionTable, iterationDepth - 1, currentAlpha, currentBeta)
             newBoard.free()
-            return@associateWith optimalScore
+            possibleScoresByMove[move] = optimalScore
+
+            if(playerToMove == Player.WHITE) {
+                currentAlpha = max(currentAlpha, optimalScore)
+            } else {
+                currentBeta = min(currentBeta, optimalScore)
+            }
+
+            if(currentAlpha > currentBeta) {
+                break
+            }
         }
+
+//        val possibleScoresByMove = possibleMoves.associateWith { move ->
+//            val newBoard = board.clone()
+//            newBoard.movePiece(move)
+//            val optimalScore = calculateOptimalScore(newBoard, otherPlayer, transpositionTable, iterationDepth - 1)
+//            newBoard.free()
+//            return@associateWith optimalScore
+//        }
 
         return possibleScoresByMove
     } else {
@@ -55,7 +89,7 @@ fun calculateMoveRanking(board: Board, playerToMove: Player, transpositionTable:
             val newBoard = board.cloneWithNewPool()
             val newTranspositionTable = transpositionTable.clone()
             newBoard.movePiece(move)
-            val optimalScore = calculateOptimalScore(newBoard, otherPlayer, newTranspositionTable, iterationDepth - 1)
+            val optimalScore = calculateOptimalScore(newBoard, otherPlayer, newTranspositionTable, iterationDepth - 1, alpha, beta)
             println(newTranspositionTable.toString())
             return@map optimalScore
         }.collect(Collectors.toList())

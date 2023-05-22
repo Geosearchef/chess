@@ -10,7 +10,6 @@ import PAWN_MASK
 import Player
 import QUEEN_MASK
 import ROOK_MASK
-import engine.calculateMoveRanking
 import engine.calculateOptimalMovesIteratively
 import getPieceRepresentation
 import isWhite
@@ -301,7 +300,7 @@ fun main(args: Array<String>) {
     println()
 
     val board = Board()
-    val visualizer = BoardVisualizer(board, iterationDepths = listOf(5, 2), autoPlay = false, invert = false)
+    val visualizer = BoardVisualizer(board, iterationDepths = listOf(6, 2), autoPlay = false, invert = false)
 
     visualizer.requestRepaint()
 }
