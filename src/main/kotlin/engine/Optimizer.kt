@@ -69,6 +69,7 @@ fun calculateMoveRanking(board: Board, playerToMove: Player, transpositionTable:
 fun calculateMoveRankingIteratively(board: Board, playerToMove: Player, transpositionTable: TranspositionTable, iterationDepths: List<Int> = listOf(4, 6, 8), parallel: Boolean = false): Map<Move, Double> {
     var allowedInitialMoves = board.getPossibleMoves(playerToMove)
     var lastRanking: Map<Move, Double> = mapOf()
+    var firstRanking: Map<Move, Double> = mapOf()
 
     println("\nCalculating move ranking...")
     val startTimeAll = System.currentTimeMillis()
@@ -82,6 +83,10 @@ fun calculateMoveRankingIteratively(board: Board, playerToMove: Player, transpos
 
         allowedInitialMoves = bestMoves.toList()
 
+        if(firstRanking.isEmpty()) {
+            firstRanking = ranking
+        }
+
         lastRanking = ranking
 
         println("Depth: $iterationDepth, t: ${System.currentTimeMillis() - startTimeIteration} ms, remaining: ${bestMoves.size}")
@@ -91,6 +96,7 @@ fun calculateMoveRankingIteratively(board: Board, playerToMove: Player, transpos
         }
     }
 
+    println("Deepest score of best move: ${if(playerToMove == Player.WHITE) firstRanking.values.maxOrNull() else firstRanking.values.minOrNull()}")
     println("Done. Took ${System.currentTimeMillis() - startTimeAll} ms.\n")
 
     return lastRanking

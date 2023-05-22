@@ -16,7 +16,7 @@ class Board(init: Boolean = true, val size: Int = 8, var boardPool: BoardPool = 
 
     var hash: Long = 0L
 
-    val squares: ArrayList<Coords> get() = Board.squares
+    val squares: Array<Coords> get() = Board.squares
 
     // optimization
     var whiteKingTaken = false
@@ -45,13 +45,13 @@ class Board(init: Boolean = true, val size: Int = 8, var boardPool: BoardPool = 
     }
 
     companion object {
-        val squares = ArrayList<Coords>().apply {
+        val squares: Array<Coords> = ArrayList<Coords>().apply {
             for(x in 0 until 8) {
                 for(y in 0 until 8) {
                     add(Coords(x, y))
                 }
             }
-        }
+        }.toArray(Array<Coords>(64) { Coords(0, 0) })
     }
 
     init {

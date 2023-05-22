@@ -222,7 +222,7 @@ class BoardVisualizer(val board: Board, val invert: Boolean = false, val iterati
                 optimalNextMoves.addAll(bestMoves)
             }
 
-            println("Minimum score of best move: $bestScore")
+            println("Minimum score of best move: $bestScore") // this is the score of the last evaluation, aka. depth=2
 
             requestRepaint()
 
