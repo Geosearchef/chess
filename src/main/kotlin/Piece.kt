@@ -58,6 +58,7 @@ fun Int.getPieceRepresentation(): String {
     return key
 }
 
+fun Int.isNone() = this == NONE
 fun Int.isPawn() = PAWN_MASK.and(this) != 0
 fun Int.isKnight() = KNIGHT_MASK.and(this) != 0
 fun Int.isBishop() = BISHOP_MASK.and(this) != 0

@@ -49,7 +49,7 @@ fun calculateMoveRanking(
 ): Map<Move, Double> {
     val otherPlayer = playerToMove.otherPlayer
 
-    val possibleMoves = allowedInitialMoves ?: board.getPossibleMoves(playerToMove)
+    val possibleMoves = allowedInitialMoves ?: board.getPossibleMoves(playerToMove).sortedBy { -it.alphaBetaPriority(board) }
 
     if(!parallel) {
         val possibleScoresByMove = HashMap<Move, Double>()

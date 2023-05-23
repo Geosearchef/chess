@@ -1,9 +1,18 @@
-import util.math.Vector
 import kotlin.math.abs
-import kotlin.math.absoluteValue
 
 data class Move(val from: Coords, val to: Coords, val player: Player, val enPassantTarget: Coords? = null, val castleRookMove: Move? = null) {
     override fun toString() = "$from -> $to"
+
+    fun alphaBetaPriority(board: Board): Int {
+        if(board.piece(from).isPawn() && !board.piece(to).isNone()) {
+            return 1
+        }
+        if(board.piece(to).isQueen()) {
+            return 2
+        }
+
+        return 0
+    }
 
     fun isInBounds(board: Board) = from.isInBounds(board) && to.isInBounds(board)
 
