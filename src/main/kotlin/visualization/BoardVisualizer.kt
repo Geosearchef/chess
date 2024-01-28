@@ -300,7 +300,7 @@ fun main(args: Array<String>) {
     println()
 
     val board = Board()
-    val visualizer = BoardVisualizer(board, iterationDepths = listOf(6, 4, 2), autoPlay = true, invert = true)
+    val visualizer = BoardVisualizer(board, iterationDepths = listOf(6, 4, 2), autoPlay = true, invert = false)
 
     visualizer.requestRepaint()
 }

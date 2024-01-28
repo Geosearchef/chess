@@ -82,10 +82,10 @@ fun calculateMoveRanking(
 
             // only executed on the level below the parallel level
 //            sharedAlphaBeta?.update(currentAlpha, currentBeta)
-            sharedAlphaBeta?.let {
-                currentAlpha = max(currentAlpha, it.alpha)
-                currentBeta = min(currentBeta, it.beta)
-            }
+//            sharedAlphaBeta?.let {
+//                currentAlpha = max(currentAlpha, it.alpha)
+//                currentBeta = min(currentBeta, it.beta)
+//            }
 
             if(currentAlpha > currentBeta) {
                 break
@@ -110,11 +110,11 @@ fun calculateMoveRanking(
             newBoard.movePiece(move)
             val optimalScore = calculateOptimalScore(newBoard, otherPlayer, newTranspositionTable, iterationDepth - 1, alpha, beta, sharedAlphaBeta)
 
-            if(move.player == Player.WHITE) {
-                sharedAlphaBeta.update(alpha = optimalScore)
-            } else {
-                sharedAlphaBeta.update(beta = optimalScore)
-            }
+//            if(move.player == Player.WHITE) {
+//                sharedAlphaBeta.update(alpha = optimalScore)
+//            } else {
+//                sharedAlphaBeta.update(beta = optimalScore)
+//            }
 
             println(newTranspositionTable.toString())
             return@map optimalScore
